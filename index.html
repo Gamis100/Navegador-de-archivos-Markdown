@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BackEnd - JS [Laboratorio]</title>
+  </head>
+  <body>
+    <div id="app">
+      <div>
+        <h1>Files</h1>
+        
+        <ul id="example-1">
+          <li v-for="item in files" >
+            <button v-on:click="readFile(item)">{{ item }}</button>
+          </li>
+        </ul>
+        
+      </div>
+      <hr />
+      <div>
+        <h1>Markdown Editor</h1>
+        <form action="#" id="markupForm">
+          <input v-model="filename" type="text" id="filename" /><span>.md</span> <br /><br />
+          <textarea v-model="markupText" id="markupText" rows="5" cols="100">
+# Titulo ## Subtitulo
+        </textarea
+          >
+          <br />
+          <button v-on:click="recitar()" type="button">Preview</button>
+          <button v-on:click="createFile()" type="button" id="save">Save</button>
+        </form>
+        <div>{{ message }}</div>
+      </div>
+
+      <div>
+        <h1>Preview</h1>
+        <div v-html="htmlCode"></div>
+      </div>
+    </div>
+
+    <!--Se esta usando VUE url:https://es.vuejs.org/v2/guide/installation.html#Runtime-Compilador-vs-Runtime-->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script type="text/javascript">
+      var vm = new Vue({
+        el: "#app",
+        data: {
+          filename: '',
+          markupText: '',
+          htmlCode: '',
+          message: '',
+          files: ''
+        },
+        mounted() {
+          this.loadDirectoryFiles();
+        },
+        methods: {
+          recitar() {
+            const url = "http://localhost:3000/";
+            const data = {
+              text: this.markupText,
+            };
+            console.log(data);
+            const request = {
+              method: "POST", // Podría ser GET
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
+            };
+            http = fetch(url, request);
+            http
+              .then((response) => response.json())
+              .then((data) => {
+                this.htmlCode = data.text;
+              });
+          },
+          loadDirectoryFiles() {
+            const url = "http://localhost:3000/directory-files";
+            fetch(url)
+              .then((response) => response.json())
+              .then((data) => {
+                this.files = data.files;
+              });
+          },
+          readFile(filename){
+            const url = "http://localhost:3000/read-file?filename="+filename;
+            fetch(url)
+              .then((response) => response.json())
+              .then((data) => {
+                this.htmlCode = data.text;
+              });
+          },
+          createFile() {
+            this.message = "Creating...";
+
+            const url = "http://localhost:3000/create-file";
+            const request = {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                text: this.markupText,
+                filename: this.filename,
+              }),
+            };
+            http = fetch(url, request);
+            http
+              .then((response) => response.json())
+              .then((data) => {
+                this.message = data.message;
+              })
+              .then(() => {
+                this.loadDirectoryFiles();
+              })
+              .catch((error) => {
+                console.log(error);
+              });
+          },
+        },
+      });
+    </script>
+  </body>
+</html>
+
